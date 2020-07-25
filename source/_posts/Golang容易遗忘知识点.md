@@ -1,11 +1,11 @@
 ---
 title: Golang易遗忘知识点
-tags: Golang
-categories: Golang基础
+tags: Golang基础
+categories: Golang
 ---
 
 个人笔记
-## 1.golang中len cap append关系
+## 1.len cap append关系
 ``` code
 func main() {
 	a1 := make([]int, 5)
@@ -40,7 +40,7 @@ func main() {
 	log.Printf("d2 len:%d, cap:%d, addr:%p, value%v\n\n", len(d2), cap(d2), d2, d2)
 }
 ```
-代码输出结果:
+输出:
 ``` output
 2020/07/25 16:08:03 a1 len:5, cap:5
 
@@ -72,3 +72,66 @@ c2、c3、c4有相同的地址，但是具体值不同，因为c3、c4都是在c
 
 d1:在c3的基础上把len拉到与c3的cap相同，c3中也是有c3[6]为8这个值的且d1的地址与c3相同
 d2:在c3的基础上截取第一个元素之后的数据，相对应c3，len和cap都删除了第一个数据，同时地址也改变了
+
+## 2.defer return
+``` code
+func main() {
+	log.Println("method a:", a())
+	log.Println("method b:", b())
+	log.Println("method c:", c())
+}
+
+func a() int {
+	var i int
+	defer func() {
+		i++
+		fmt.Println("a defer2:", i) // 打印结果为 defer: 2
+	}()
+	defer func() {
+		i++
+		fmt.Println("a defer1:", i) // 打印结果为 defer: 1
+	}()
+	return i
+}
+
+func b() (i int) {
+	num := 0
+	defer func() {
+		i++
+		fmt.Println("b defer2:", i) // 打印结果为 defer: 2
+	}()
+	defer func() {
+		i++
+		fmt.Println("b defer1:", i) // 打印结果为 defer: 1
+	}()
+	return num // 或者直接 return 效果相同
+}
+
+func c() (i int) {
+	defer func() {
+		i++
+		fmt.Println("c defer2:", i) // 打印结果为 defer: 2
+	}()
+	defer func() {
+		i++
+		fmt.Println("c defer1:", i) // 打印结果为 defer: 1
+	}()
+	return i // 或者直接 return 效果相同
+}
+```
+输出
+``` output
+a defer1: 1
+a defer2: 2
+2020/07/25 17:13:50 method a: 0
+2020/07/25 17:13:50 method b: 2
+2020/07/25 17:13:50 method c: 2
+b defer1: 1
+b defer2: 2
+c defer1: 1
+c defer2: 2
+```
+return并非原子操作，分为赋值和返回两个操作，defer return执行顺序为先执行return语句，写入返回值，再执行defer，defer执行完成再返回数据。
+a方法写入返回值后，修改i的值已经不影响最终返回值；
+b方法return写入返回值到i，defer方法修改i的值，最终返回；
+c方法return写入b到返回值i，defer方法修改i的值，最终返回。
