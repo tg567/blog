@@ -1,6 +1,9 @@
 ---
 title: Golang易遗忘知识点
+tags: Golang
+categories: Golang基础
 ---
+
 个人笔记
 ## 1.golang中len cap append关系
 ``` code
